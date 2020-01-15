@@ -81,3 +81,114 @@
     node_modules
 ```
 
+### 각 설정파일들 내용 입력하기
+
+설정이 필요한 파일들을 만들자.
+
+```
+
+    workspace/backend> touch nodemon.json
+    workspace/backend> touch tsconfig.json
+    workspace/backend> touch tslint.json
+    workspace/backend> touch .babelrc
+
+```
+
+#### nodemon.json
+
+```json
+
+    {
+    "ext": "js graphql"
+    } 
+
+```
+
+> 위 파일에서 _"ext"_ 속성은 확장자를 의미하는데 해당 확장자의 코드가 수정될 경우 프로젝트는 새로고침된다.
+
+#### tsconfig.json
+
+```json
+
+{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "module": "commonjs",
+      "target": "es5",
+      "lib": ["es6", "dom", "esnext.asynciterable"],
+      "sourceMap": true,
+      "allowJs": true,
+      "moduleResolution": "node",
+      "rootDir": "src",
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitReturns": true,
+      "noImplicitThis": true,
+      "noImplicitAny": false,
+      "strictNullChecks": true,
+      "suppressImplicitAnyIndexErrors": true,
+      "noUnusedLocals": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true
+    },
+    "exclude": [
+      "node_modules",
+      "build",
+      "scripts",
+      "acceptance-tests",
+      "webpack",
+      "jest",
+      "src/setupTests.ts"
+    ]
+}
+
+```
+
+> typescript의 설정파일로 트랜스파일링할때의 설정정보를 넣은 것 같음 자세히는 모름. 니가 알아봐
+
+#### tslint.json
+
+```
+
+{
+    "extends": ["tslint:recommended", "tslint-config-prettier"],
+    "linterOptions": {
+      "exclude": ["config/**/*.js", "node_modules/**/*."]
+    },
+    "rules": {
+      "no-console": false,
+      "member-access": false,
+      "object-literal-sort-keys": false,
+      "ordered-imports": true,
+      "interface-name": false,
+      "strict-null-checks": false
+    },
+    "rulesDirectory": []
+  }
+
+```
+
+> 자세히는 모르겠고 코드 표준을 잘 지키는지 등에 대한 설정.
+
+#### .babelrc
+
+```json
+
+{
+  "presets": ["@babel/preset-env"]
+}
+
+```
+
+### 소스 폴더 구성
+
+> 소스 폴더 및 index.ts 파일을 만들자. 구조는 아래와 같다.
+
+```
+
+    workspace/backend> mkdir src
+    workspace/backend/src> touch index.ts
+
+```
