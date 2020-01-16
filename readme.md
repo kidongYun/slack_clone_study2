@@ -84,7 +84,9 @@
 
 > typescript 언어는 트랜스파일링 언어로 코드 작성 완료후 트랜스파일링 작업을 진행해야 하는데 이 패키지에 있는 tsc 도구 등을 통해 자바스크립트로 변환이 가능하다. java에서 jdk같은 느낌으로 받아들이자.
 
-### E. '.gitignore' 파일을 생성해 git에 올릴 파일을 조절해보자.
+## (2) typescript + graphql 환경 구성을 위한 설정파일 작성하기
+
+### A. '.gitignore' 파일을 생성해 git에 올릴 파일을 조절해보자.
 
 > git commit/push 전에 node_modules 폴더 내부를 보자. 우리가 설치한 패키지들 고작 몇개인데 그것들로 인해 node_modules 폴더는 수많은 파일들로 가득 차있다. 이 파일들도 git에 올리게 되면 참 고생길이 훤할 것이다. 또 정작 실제 소스들도 아님으로 그렇게 중요한 파일들은 아니다. git 업로드 내용에 제거하기 위해서 _'backend'_ 폴더 내부에 _'.gitignore'_ 파일을 생성하자. 그리고 그 안에 node_modules 라고 적자.
 
@@ -101,7 +103,7 @@
 
 > 이렇게 하면 node_modules 폴더에 해당하는 파일들을 git remote repository로 업로드 되지 않는다.
 
-### F. typescript + graphql 환경 구성을 위한 설정파일들을 구성하자.
+### B. 4개의 환경설정 파일들 생성 및 작성
 
 > 우선 typescript + graphql 기술들을 활용한 backend 환경을 구성하기 위해 필요한 설정 파일들을 만들자. 하나 알아둘 것은 현재 설치한 node package 들 중에 typeORM과 관련된 항목은 없는데 이는 이후에 관련된 package 들을 추가로 설치할 것이다. <br><br> backend 폴더에서 아래 4개의 파일을 만든다.
 
@@ -206,7 +208,9 @@
 
 > babel 관련 설정파일 이겠지..
 
-### G. typescript + graphql 서버 구동을 위한 소스를 작성해보자.
+## (3) typescript + graphql 서버 구동을 위한 소스 작성 및 실행
+
+### A. 소스 코드 생성
 
 > 소스 코드를 담기위한 _'src'_ 폴더를 만들자. 현재 우리는 백엔드 환경을 구축하고 있는 것을 잊지 말자. 즉 backend 폴더 내부에 _'src'_ 폴더를 만들라는 의미다. 그리고 graphql 서버 실행을 위한 _'index.ts'_ 파일을 _'src'_ 폴더 안에 생성하자.
 
@@ -250,7 +254,7 @@
 
 ```
 
-#### package.json
+### B. package.json script 수정
 
 > node 기반 서비스들을 동작시키기 위해서 보통 npm, yarn 등의 패키지 관리자를 활용해 스크립트를 실행시킨다. 이 스크립트는 package.json 안에 script 속성을 활용해서 임의적으로 구현할 수 있으며 우리는 'index.ts' 에서 짠 graphql server가 잘 실행될 수 있도록 스크립트를 구성할것이다.
 
@@ -301,7 +305,7 @@
 
 <img src="./res/5.png" style="width:50%;"/>
 
-### H. graphql server 실행하기.
+### C. graphql server 실행하기.
 
 > _'package.json'_ 안에 _'scripts'_ 속성 안에 "dev"에 해당하는 코드를 살펴 보면 src 폴더로 이동한 이후 _'index.ts'_ 파일을 ts-node를 활용해서 트랜스파일링 하고, 그 트랜스파일링된 js 파일을 nodemon으로 실행시키는 형태이다.
 
@@ -340,16 +344,16 @@
 
 [localhost:4000](http://localhost:4000/)
 
+> 이 IDE는 postman의 역할과 유사하며, graphql 형식으로 REQ를 던지면 RES가 어떻게 나오는지를 확인해볼수 있다.
 
 
-
-
-
-
-
-### I. graphql에서 스키마 에 대한 이해도 높이기.
+### D. graphql에서 스키마 에 대한 이해도 높이기.
 
 > 
+
+## (4) postgresql + typeORM + typescript + graphql 환경 구축하기
+
+> 지금까지 작업한 내용은 typescript + graphql 까지만을 활용한 환경 구축하기였다. 이제 여기에 postgresql 데이터베이스와 
 
 ### 2020.01.16
 
