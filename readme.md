@@ -338,7 +338,7 @@
 
 > yarn 만 입력한 첫번째 명령어는 _'yarn'_ 패키지 매니저의 관련 기능들을 최신화 시켜주는 것이고 _'yarn dev'_ 명령어가 위의 _'npm dev run'_ 명령어와 동일하게 -'dev'_ 스크립트를 실행하는 역할을 한다.
 
-<img src="./res/6.png" style="width:50%;"/>
+<img src="./res/7.png" style="width:50%;"/>
 
 > 위와 같은 로그가 보인다면 아래 링크를 클릭 혹은 'localhost:4000' 으로 접속해보자. 그러면 graphql-playground 패키지가 제공해주는 IDE를 확인할 수 있다.
 
@@ -347,13 +347,183 @@
 > 이 IDE는 postman의 역할과 유사하며, graphql 형식으로 REQ를 던지면 RES가 어떻게 나오는지를 확인해볼수 있다.
 
 
-### D. graphql에서 스키마 에 대한 이해도 높이기.
+### D. graphql에서 query?
 
-> 
+> query 타입과 mutation 타입은 graphql에서 일반적인 객체 타입과 동일하나 모든 graphql 타입 정의에서 첫부분에 사용된다는 점이 특별하다. 즉 이 타입들은 스키마에서 _'entry point'_ 즉 하나의 진입점으로 생각할 수 있다. query나 mutation 타입이 있다면 '아 이부분 부터 시작하는구나' 라고 인지시킬수 있다는 것이다. 그러나 아까 말했다시피 이들도 객체 타입임으로 object 타입과 동일하게 동작함을 기억하고 있는 것은 중요하다.
+
+```
+
+query {
+  hero {
+    name
+  }
+  droid(id: "2000") {
+    name
+  }
+}
+
+```
+
+> 위와같은 쿼리를 본다면 _'query'_ 키워드를 통해 진입점을 찾고 그 안에 있는 _'hero'_, _'droid'_ 필드를 요청한다.
+
 
 ## (4) postgresql + typeORM + typescript + graphql 환경 구축하기
 
-> 지금까지 작업한 내용은 typescript + graphql 까지만을 활용한 환경 구축하기였다. 이제 여기에 postgresql 데이터베이스와 
+> 지금까지 작업한 내용은 typescript + graphql 까지만을 활용한 환경 구축하는 방법이였다. 이제 여기에 postgresql 데이터베이스와 typeORM을 추가 연동하여 DB에 접근이 가능하도록 해보자.
+
+### A. 새로운 패키지 추가.
+
+> 위에서 패키지들을 설치할 때 postgresql, typeORM와 관련된 패키지들은 설치하지 않았다. 이제 아래의 명령어를 활용해서 3개의 패키지를 더 추가해보자. 백엔드 폴더에서 설치해야함을 잊지말자.
+
+```
+  workspace/backend> npm install pg typeorm dotenv
+```
+
+> 설치가 잘 되었다면 아래처럼 _'dependecies'_ 항목에 추가되었을 것이다.
+
+<img src="./res/8.png" style="width:50%;"/>
+
+### B. 각 패키지에 대한 간략한 설명.
+
+#### pg
+
+> postgresql 데이터베이스를 node에서 사용하기 위해서 추가로 설치해야 하는 패키지.
+
+#### typeorm
+
+> 말 그대로 typeORM을 사용하기 위한 패키지.
+
+#### dotenv
+
+> 데이터베이스의 환경설정 정보 같은 것을 다른 파일에 정의 해두고 사용하고 싶을 때 사용하는 패키지. 이렇게 되면 git 관리를 통해 보안성을 좀 더 향상 시킬 수 있다.
+
+### C. ormConfig.ts, .env 파일 생성
+
+> typeORM을 활용해서 postgresql 데이터베이스를 함께 연동할 것이다. 연동할 때 필요한 설정들을 가지고 있는 파일 _'ormConfig.ts'_과 DB 정보를 가지고 있는 _'.env'_ 파일을 생성하자.
+
+```
+  workspace/backend/src> touch ormConfig.ts
+  workspace/backend/src> touch .env
+```
+
+#### .env
+
+```
+DB_HOST = "localhost"
+DB_USERNAME = "slack_clone"
+DB_PASSWORD = "root"
+```
+
+#### ormConfig.ts
+
+```typescript
+import { ConnectionOptions, Connection, createConnection } from "typeorm";
+// typeorm 패키지에서 위 3개의 객체들을 가져온다.
+//  ConnectionOptions : typeORM에서 DB 환경 정보를 받기 위한 객체 타입.
+//  Connection : typeORM에서 제공하는 연결 객체 타입 인듯.
+//  createConnection : 연결을 만드는 함수
+
+const dotenv = require("dotenv");
+dotenv.config();
+// dotenv 패키지를 통해서 미리 만들어둔 DB 환경설정 정보를 가져온다. (계정, 패스워드 ...)
+
+const connectionOptions:ConnectionOptions = {
+    type : "postgres",              
+    // typeORM 통해 사용할 DBMS
+    database : "slack_clone",       
+    // 데이터베이스 이름
+    synchronize : true,             
+    // DB관련 코드 수정 내용을 바로바로 적용할지에 대한 여부
+    logging : true,                 
+    // 서버가 시작될 때 DB 생성하는 쿼리 등의 로그를 보여줄지에 대한 여부
+    entities : ["entities/**/*.*"],  
+    // typeORM은 테이블의 생성을 도와주는데 그 테이블의 스키마 등을 명세하는 객체를 entity라고 함 그 파일들의 경로를 가리킴.
+    host : process.env.DB_HOST,
+    // 데이터베이스 접근할 때 
+    port : 5432,
+    // 데이터베이스 연결할 때 어떤 포트를 쓸건지에 대한 설정
+    username : process.env.DB_USERNAME,
+    // 데이터베이스 연결할 때 사용자 이름.
+    password : process.env.DB_PASSWORD
+    // 데이터베이스 연결할 때 사용자 비밀번호.
+}
+
+const connection:Promise<Connection> = createConnection(connectionOptions);
+// 위에서 정의한 connectionOptions와 연결 객체를 만드는 createConnection() 함수를 활용해서 DB connection 객체를 만들고 이를 반환. 이 connection 타입은 Promise<Connection> 으로 Connection 객체인데 비동기로 받겠다는 의미.
+
+export default connection;
+
+```
+
+### D. Promise 잠깐 알아보고 가자
+
+> ES6로 넘어오기 전 JS의 문법에서는 Ajax와 같은 비동기 처리를 위해서 아래와 같은 형식의 콜백함수를 활용해야했다. 이러한 코드는 읽을 때 흐름이 계속 이리저리 바뀌게 되어 가독성에 좋지 않고 비동기 처리가 chaining될 경우 계속 중첩된 코드를 작성해야하는 이슈가 있다.
+
+```js
+
+function getData(callbackFunc) {
+  $.get('url', function (response) {
+    callbackFunc(response); 
+  });
+  }
+
+getData(function (tableData) {
+  console.log(tableData);
+});
+
+```
+
+> Promise 객체를 사용하게되면 이러한 비동기 처리를 보다 가독성이 좋은 방법으로 구현할 수 있다. 
+
+```js
+
+function getData(callback) {
+  return new Promise(function (resolve, reject) {
+    $.get('url 주소/products/1', function (response) {
+      resolve(response);
+    });
+  });
+}
+
+getData().then(function (tableData) {
+  console.log(tableData);
+});
+
+```
+
+> Promise 도입에 의해 정의하는 부분은 코드가 더 복잡하다고 생각할 수 있지만 실제 비동기 처리를 요구하는 실제로 getData() 함수를 사용하는 부분은 보다 더 간단해진다. 
+
+### E. index.ts를 수정하고 postgresql + typeORM + typescript + graphql 환경 실행해보자.
+
+> graphql 서버만 실행하는 기존코드에서 typeORM을 통해 postgresql DB를 먼저 연결 하고 그다음에 graphql 서버를 시작하는 코드로 수정하였다.
+
+```ts
+
+// (AS-IS)
+server.start(() => 
+  console.log('My first GraphQL Server is running on localhost:4000')
+)
+
+// (TO-BE)
+connection.then(() =>
+    server.start(() => 
+        console.log('My first GraphQL Server is running on localhost:4000')
+    )
+);
+
+```
+
+> 위에서 만든 스크립트를 실행하여 작동 시켜보자.
+
+```
+  workspace/backend> yarn dev
+```
+
+<img src="./res/9.png" style="width:50%;"/>
+
+> 위의 이미지 처럼 테이블들을 생성하는 로그가 나오고 서버가 실행되었다면 잘 구현한것이다.
+
+[localhost:4000](http://localhost:4000/)
 
 ### 2020.01.16
 
