@@ -336,7 +336,7 @@
 
 ```
 
-> yarn 만 입력한 첫번째 명령어는 _'yarn'_ 패키지 매니저의 관련 기능들을 최신화 시켜주는 것이고 _'yarn dev'_ 명령어가 위의 _'npm dev run'_ 명령어와 동일하게 -'dev'_ 스크립트를 실행하는 역할을 한다.
+> yarn 만 입력한 첫번째 명령어는 _'yarn'_ 패키지 매니저의 관련 기능들을 최신화 시켜주는 것이고 _'yarn dev'_ 명령어가 위의 _'npm dev run'_ 명령어와 동일하게 _'dev'_ 스크립트를 실행하는 역할을 한다.
 
 <img src="./res/7.png" style="width:50%;"/>
 
@@ -582,6 +582,8 @@ export default Message
 
 ```
 
+> 
+
 #### Channel.ts
 
 ```ts
@@ -613,6 +615,20 @@ export default Channel
 
 ```
 
+일대다&다대일
+부모와 자식의 관계에서 자식이 그 부모에 고유성을 가지는 것이면 일대다&다대일 관계를 사용.
+그러나 고유성이 없다면 다대다 관계를 사용.
+
+> 오직 N:M 관계를 사용하는 방법과 1:N, M:1 두가지를 관계를 사용하는 방법의 차이에 대해서 의아할 수도 있다. 이는 자식의 고유성을 고려했을 때 존재한다면 1:N, M:1으로 표현하고 그렇지 않다면 N:M 관계로 생각하자. 추가적으로 N:M 관계는 사실상 물리적으로 구현이 불가능하고 성능 상의 문제가 있어 사실상 N:1, 1:M으로 표현되어야 한다. 결론적으로 자식의 고유성에 따라 DB 모델링 할때 고려되어지는 방안은 아래와 같다.
+
+```
+  if(자식의 고유성 유)
+    then 1:N, M:1
+  
+  else if(자식의 고유성 무)
+    then N:1, 1:M
+```
+
 > 프로젝트를 실행한 후 postgresql에 두 테이블이 생성되었는지 확인해보자.
 
 ```
@@ -623,87 +639,109 @@ export default Channel
 
 <img src="./res/11.png" style="width:50%;"/>
 
-<img src="./res/12.png" style="width:50%;"/>
+<img src="./res/12.png" style="width:50%;"/>`
 
-### 2020.01.16
+## (5) graphql 구조 개선하기.
 
-GraphQL Schema 정보를 다른 폴더 구조로 뺴고 이들을 만든다음에 생성.
+> _'index.ts'_ 파일을 보자. graphql 서버를 실행시키기 위해서는 _'typeDefs'_, _'resolvers'_ 이 두가지 파라미터가 필요하다.
+이러한 정보들을 graphql의 스키마라고 부르는데 지금까지의 스키마 정보는 단순히 graphql을 실행시키기 위해서 임의의 샘플 정보를 넣어둔 것이였다. 이번에는 실제로 slack을 구현할 수 있도록 이 스키마 정보를 수정해보자. 또 스키마 관리의 효율성을 증대시키기 위해서 이 스키마 데이터들을 별도의 파일로 관리하는 방법을 알아보자.
 
-@ManyToOne 어노테이션 안에 값들이 대소문자가 구분되는데
+### A. _'merge-graphql-schemas'_ 패키지 설치
 
-=
-setRelation(innderChannel, channel.messages)
--> 다 대 1이라는 관계를 설정한 것.
+> graphql의 schema, resolver 들을 별도의 폴더로 관리할 수 있게 해주는 패키지 이다.npm 혹은 yarn을 활용해서 위의 패키지를 설치하자.
 
+```
+  workspace/backend> npm install merge-graphql-schemas
+```
+```
+  workspace/backend/src> touch schema.ts
+```
 
-그거는 닉네임을 설정한거라고 생각하면 됨.
+#### B. graphql을 위한 _'Type'_, _'Resolver'_ 정의
 
-Channel as channel
+> 이 환경에 가장 아쉬운 부분이라고 생각되는 것은 typeORM을 이용하기 위한 VO와 graphql을 이용하기 위한 모델이 별도로 관리되어야 하는 점이다. 이는 아직 graphql의 버전이 낮아서 개선이 안된 부분이라고 함. 위에서 typeORM을 활용할 때에는 _'Message'_, _'Channel'_ 테이블을 구성하기 위해서 이들을 위한 _'Message.ts'_, _'Channel.ts'_ 파일을 만들었다. 이번에는 graphql를 활용해 Client, Server의 api 통신하기 위한 모델을 작성할 것이다. 이 모델들은 graphql 서버를 실행할 때 반드시 필요한 _'type'_, _'resolver'_ 정보를 필히 규명해야 한다. _'index.ts'_에서 sample 사용되었던 _'type'_, _'resolver'_를 대신하기 위해 별도의 폴더, 파일로 관리되는 구조를 만들자.
 
-다대다에대한 생각.
+```
 
-다대다 방식을 그대로 사용하여 모델링하는가.
-혹은 중간에 한개의 테이블을 더 만들어서 구현하는가 의 개념.
+  workspace/backend/src> mkdir api
 
-일대다&다대일
-부모와 자식의 관계에서 자식이 그 부모에 고유성을 가지는 것이면 일대다&다대일 관계를 사용.
-그러나 고유성이 없다면 다대다 관계를 사용.
+  workspace/backend/src/api> mkdir Channel
+  workspace/backend/src/api> mkdir Message
 
-긍데 원래 디비 설계할 때 다대다도 다대일&일대다로 만들어야 되는뎅. -> 성능문제
+  workspace/backend/src/api/Channel> mkdir Shared
+  workspace/backend/src/api/Channel/Shared> touch Channel.graphql
 
-schema.ts 파일이 이제 그래프큐엘 설정에 필요한 정보들 타입, 리졸버에대한 정의를 진행하는 파일.
-사실 하나의 typeDef 안에 모든걸 정의할 수 잇다면, 리졸버도 그렇다면 이렇게 구분할 필요가 없지만.
+  workspace/backend/src/api/Message> mkdir Shared
+  workspace/backend/src/api/Message/Shared> touch Message.graphql
 
-만약 이것들을 정리를 하고 싶다면 다른 디렉토리, 파일들을 구현해 별도고 관리하고. 이것들이 schema.ts 로 임포트되고
-마지막으로 이파일이 스키마를 정리해서 graphQLServer에 전달한다. 이 정보를 가지고 그래프큐엘 서버를 생성한다.
+```
 
-Message.graphql 과 Message.ts 의 차이는 타입도 다르고 뭐 다다름.
-전자는 그래프큐엘 관점에서의 정의를 사용한거고.
-후자는 엔티티 생성시 필요한 파일.
+#### Channel.graphql
 
-타입스크립트와 그래프큐엘을 같이사용하기 위해서는 일단 자료형 관리가 그래프큐엘을 위한것, 타입스크립트를 위한것
-이렇게 두가지로 관리를 해야함 -> 이거는 아직 버전이 낮아서 개선이 안된 부분이라고 생각.
+```ts
 
-src/entities/Channel.ts -> 엔티티 즉 postgres를 위한 자료형,. 아니다 typeORM이라고 생각해야겠다.
-Channel.graphql -> 그래프큐엘를 위한 자료형.
+// workspace/backend/src/api/Channel/Shared/Channel.graphql
 
-이 둘의 파일은 항상 싱크가 맞아야함 -> 둘의 구조가 동일해야함.
-이건 사실 좀 안좋은 것 같은데.
+type Channel {
+    id: Int!
+    channelNicName: String!
+    messages: [Message]        // 이거는 한개의 채널에 많은 메시지들을 가질 수 있으니 여러개를 넣기 위해 배열로 선언
+    createAt: String!
+    updatedAt: String
+}
 
-GetMessages -> 이건 그래프큐엘에서 사용하는 api임. 리턴값과 파라미터들을 정의함.
-GetMessages.graphql 이 파일은 그래프큐엘을 위한 타입. 확장자만 봐도 알 수 있다.
+```
 
-message
+#### Message.graphql
 
-오늘 가장 큰 논점 주제는 graphql과 typeORM의 VO가 서로 상이해도 연결이 되는가 .
+```ts
 
-완전히 맞아야하는가. 아니면 약한 결합성을 가져서 완전히 맞지는 않아도 연결이 되는가.
-이건 테스트 해보면 될것 같은데.
+// workspace/backend/src/api/Message/Shared/Message.graphql
 
+type Message {
+  id: Int!
+  nickname: String!
+  contents: String!
+  innerChannel: Channel!
+  innerChannelId: Int!
+  createdAt: String!
+  updatedAt: String
+}
 
-graphql
-typedefs (파라미터)
-->
+```
 
-->
+> 이 graphql을 위한 모델은 typeORM을 위한 모델과 동일한 필드, 타입을 가지고 있다. 만약 여러가지 상황에 의해 서로 상이해야할 경우가 생긴다면. 커스터마이징된 type을 새로 생성하거나 resolver에서 필요하지않은 필드의 값을 null로 주고 api 통신을 진행할 수도 있다. 지금까지 만든 스키마 파일들을 GraphQLServer 객체로 전달하기에 적절한 형태로 융합하고 정제하는 _'schema.ts'_를 만들자.
 
-->
-graphql
-return
+```ts
 
-typeORM에게 파라미터를 가공하기 위해서 typedef를 사용.
+import { fileLoader, mergeResolvers, mergeTypes } from "merge-graphql-schemas"
+import { makeExecutableSchema } from "graphql-tools"
+import path from "path"
 
-graphql typedef != ts typedef
+const allTypes: any = fileLoader(path.join(__dirname, "./api/**/*.graphql"));
+// type 관련 파일들을 가져옴.
 
-typesrcipt에는 any타입이 없다.
+const allResolvers: any = fileLoader(path.join(__dirname, "./api/**/*.resolvers.*"));
+// resolver 관련 파일들을 가져옴.
 
-d.ts -> 커스텀 타입 디피니션 파일
+const mergedTypes = mergeTypes(allTypes);
+const mergedResolvers: any = mergeResolvers(allResolvers);
+// 가져온 type, resolver 들을 가지고 무언가 작업을 해주는 것 같은데 잘 모르겠다.
 
-리졸버를 만들때마다 정의를 해야함.
+const schema = makeExecutableSchema({
+    typeDefs: mergedTypes,
+    resolvers: mergedResolvers
+});
+// type, resolver를 가지고 schema를 구성한다.
 
-Resolvers 는 지원해주지 않으니 우리가 만듬.
+export default schema;
 
-schema.ts 에서 각 파일들을 융합해서 관리하기 때문에 이 파일들끼리는 굳이 import해주지 않아도 된다
+```
 
-typeORM에서 주는 데이터를 그래프QL데서 받을 때 커스텀하게(뭘 빼고 받는다거나) 하려면 새로운 커스텀 타입을 정의해서 가져와야함.
-혹은 리졸버 내부에서 새롭게 가공하거나.
+> _'index.ts'_ 파일에서 기존에 작업해두었던 샘플 type, resolver는 지우고 위 schema.ts에서 만들어진 schema 정보를 사용할 수 있도록 구성해보자.
+
+#### index.ts
+
+```
+
+```
