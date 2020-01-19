@@ -8,7 +8,7 @@
 
 ## 1. postgresql + typeORM + typescript + graphql 기초 설정하기
 
-## (1) node package 설치하기
+## (1) typescript + graphql 관련 node package 설치하기
 
 ### A. backend 폴더 생성하자.
 
@@ -423,7 +423,7 @@ import { ConnectionOptions, Connection, createConnection } from "typeorm";
 //  Connection : typeORM에서 제공하는 연결 객체 타입 인듯.
 //  createConnection : 연결을 만드는 함수
 
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
 dotenv.config();
 // dotenv 패키지를 통해서 미리 만들어둔 DB 환경설정 정보를 가져온다. (계정, 패스워드 ...)
 
@@ -524,6 +524,106 @@ connection.then(() =>
 > 위의 이미지 처럼 테이블들을 생성하는 로그가 나오고 서버가 실행되었다면 잘 구현한것이다.
 
 [localhost:4000](http://localhost:4000/)
+
+### F. entity를 활용하여 테이블을 구성해보자.
+
+> typeORM을 활용하면 데이터베이스에 들어가서 직접 쿼리를 날려 테이블을 생성하지 않아도 된다. typeORM에서 제공하는 entity라는 것을 활용하면 보다 자유롭게 테이블을 생성할 수 있다. 이러한 방식의 이점은 테이블을 이루는 스키마가 변경해야할 경우 단순히 entity에 관련된 소스코드 수정만 하면 됨으로 직접 생성하는 방법보다 훨씬 간단하다. 그리고 typeORM에서 다양한 데이터베이스를 지원하고 있기에 어떤 시스템의 데이터베이스가 다른 종류로 변경될 경우(예를 들어 mariaDB -> oracle) 큰 리스크 없이 변경이 가능하다.
+
+> entity를 관리하는 폴더 _'entities'_ 를 만들고 그 안에 _'Message.ts'_, _'Channel.ts'_ 두 개의 파일을 만들자.
+
+```
+  workspace/backend/src> mkdir entities
+  workspace/backend/src/entities> touch Message.ts
+  workspace/backend/src/entities> touch Channel.ts
+```
+
+> _'Message.ts'_, _'Channel.ts'_ 두 파일은 각각 Message 테이블, Channel 테이블을 생성할 때 필요한 스키마 정보들을 가지고 있다.
+
+#### Message.ts
+
+```ts
+
+import { Entity, BaseEntity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import Channel from './Channel'
+// 로컬에 만든 파일을 가져올 때는 확장자 생략이 가능하다.
+
+@Entity()
+// @Entity() : typeORM의 entity임을 선언
+class Message extends BaseEntity {
+    // @PrimaryGeneratedColumn() : mariaDB의 auto_increment와 유사한 역할, Primary Key로 사용할 목적
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    // @Column({type: "text", nullable: false}) : 컬럼임을 가리키며 해당 컬럼의 스키마 타입과 null값 허용 여부 명시
+    @Column({type: "text", nullable: false})
+    nickname: string;
+
+    @Column({type: "text", nullable: false})
+    contenta: string;
+
+    // 본인과 대상의 관계까 N : 1 임을 표현할 때 사용하는 어노테이션. Message : Channel = N : 1
+    // type에는 대상이 되는 클래스 명을 적고 서로 관계되어있는 컬럼으로 연결지음.
+    @ManyToOne(type => Channel, channel => channel.messages)
+    innerChannel: Channel;
+
+    @Column({type: "text", nullable: false})
+    innerChannelId: number;
+
+    // 테이블이 생성되는 시점을 저장하는 필드로 typeORM에서 제공하는 @CreateDateColumn()을 활용해서 바로 구현 가능
+    @CreateDateColumn()
+    createdAt: string;
+
+    // 테이블이 생성되는 시점을 저장하는 필드로 typeORM에서 제공하는 @UpdateDateColumn()을 활용해서 바로 구현 가능
+    @UpdateDateColumn()
+    updatedAt: string;
+}
+
+export default Message
+
+```
+
+#### Channel.ts
+
+```ts
+
+import { Entity, BaseEntity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import Message from "./Message";
+
+@Entity()
+class Channel extends BaseEntity {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column({type: "text", nullable: false})
+    channelName: string;
+
+    // 본인과 대상의 관계가 1: N 관계를 표현하기 위한 어노테이션. 대상의 관계가 N임으로 이를 표현하기 위해 배열을 사용하고 있음을 볼 수 있다.
+    @OneToMany(type => Message, message => message.innerChannel)
+    messages: Message[]
+
+    @CreateDateColumn()
+    createdAt: string;
+
+    @UpdateDateColumn()
+    updatedAt: string;
+
+}
+
+export default Channel
+
+```
+
+> 프로젝트를 실행한 후 postgresql에 두 테이블이 생성되었는지 확인해보자.
+
+```
+  workspace/backend> yarn dev
+```
+
+<img src="./res/10.png" style="width:50%;"/>
+
+<img src="./res/11.png" style="width:50%;"/>
+
+<img src="./res/12.png" style="width:50%;"/>
 
 ### 2020.01.16
 

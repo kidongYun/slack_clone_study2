@@ -1,6 +1,6 @@
 import { ConnectionOptions, Connection, createConnection } from "typeorm";
 
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
 dotenv.config();
 
 const connectionOptions:ConnectionOptions = {
