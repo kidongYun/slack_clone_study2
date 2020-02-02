@@ -11,7 +11,7 @@ class Message extends BaseEntity {
     nickname: string;
 
     @Column({type: "text", nullable: false})
-    contenta: string;
+    content: string;
 
     @ManyToOne(type => Channel, channel => channel.messages)
     innerChannel: Channel;

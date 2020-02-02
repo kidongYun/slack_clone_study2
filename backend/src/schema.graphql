@@ -1,0 +1,26 @@
+type CreateChannelResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  CreateChannel(channelName: String!): CreateChannelResponse!
+}
+
+type Channel {
+  id: Int!
+  channelName: String!
+  messages: [Message]
+  createdAt: String!
+  updatedAt: String
+}
+
+type Message {
+  id: Int!
+  nickname: String!
+  contents: String!
+  innerChannel: Channel!
+  innerChannelId: Int!
+  createdAt: String!
+  updatedAt: String
+}

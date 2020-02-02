@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "cd src && nodemon --exec ts-node index.ts -e ts,graphql"
+    "dev": "cd src && nodemon --exec ts-node index.ts -e ts,graphql",
+    "predev": "yarn run types",
+    "types": "graphql-to-typescript ./src/schema.graphql ./src/types/graphql.d.ts",
+    "pretypes": "gql-merge --out-file ./src/schema.graphql ./src/api/**/*.graphql"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "dotenv": "^8.2.0",
+    "gql-merge": "0.0.6",
     "graphql-to-typescript": "^0.1.2",
     "graphql-tools": "^4.0.6",
     "graphql-yoga": "^1.18.3",
@@ -20,7 +24,7 @@
     "ts-node": "^8.6.2",
     "tslint-config-prettier": "^1.18.0",
     "typeorm": "^0.2.22",
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.5"
   },
   "devDependencies": {
     "@types/node": "^13.1.7"
